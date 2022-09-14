@@ -3,9 +3,12 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
+	"runtime"
+	"strings"
 
 	"github.com/spf13/viper"
 )
@@ -38,22 +41,19 @@ func main() {
 		laravelCreator(projectName)
 		createVirtualServer(projectName)
 		openCodeinVscode(fmt.Sprintf("%s%s", viper.GetString("laravel_path"), projectName))
-		linkCreator()
+		linkCreator(projectName)
 		break
 	case "2":
 		golangCreator(projectName)
-		openCodeinVscode(fmt.Sprintf("%s%s", viper.GetString("laravel_path"), projectName))
+		openCodeinVscode(fmt.Sprintf("%s%s", viper.GetString("golang_path"), projectName))
 		break
 	case "3":
 		rustCreator(projectName)
-		openCodeinVscode(fmt.Sprintf("%s%s", viper.GetString("laravel_path"), projectName))
+		openCodeinVscode(fmt.Sprintf("%s%s", viper.GetString("rust_path"), projectName))
 		break
 	default:
 		log.Fatal("Wrong Select Project")
 	}
-
-	//make virtual server
-	//
 }
 
 func setupConfig() {
@@ -98,6 +98,7 @@ func setupConfig() {
 }
 
 func laravelCreator(projectName string) {
+	currentPath, _ := os.Getwd()
 	os.Chdir(viper.GetString("laravel_path"))
 	cmd := exec.Command("composer", "create-project", "laravel/laravel", projectName, "--prefer-dist")
 
@@ -111,11 +112,96 @@ func laravelCreator(projectName string) {
 		fmt.Println(m)
 	}
 	cmd.Wait()
+
+	dir := fmt.Sprintf("%s%s", viper.GetString("laraavel_path"), projectName)
+	os.Chdir(dir)
+
+	cmd = exec.Command("sudo", "chgrp", "-R", "www-data", "storage")
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+
+	out, err := cmd.Output()
+	if err != nil {
+		fmt.Println("Err", err)
+	} else {
+		fmt.Println("OUT:", string(out))
+	}
+
+	cmd = exec.Command("sudo", "chgrp", "-R", "www-data", "bootstrap/cache")
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+
+	out, err = cmd.Output()
+	if err != nil {
+		fmt.Println("Err", err)
+	} else {
+		fmt.Println("OUT:", string(out))
+	}
+
+	cmd = exec.Command("sudo", "chmod", "-R", "775", "storage")
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+
+	out, err = cmd.Output()
+	if err != nil {
+		fmt.Println("Err", err)
+	} else {
+		fmt.Println("OUT:", string(out))
+	}
+
+	cmd = exec.Command("sudo", "chmod", "-R", "775", "bootstrap/cache")
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+
+	out, err = cmd.Output()
+	if err != nil {
+		fmt.Println("Err", err)
+	} else {
+		fmt.Println("OUT:", string(out))
+	}
+
+	os.Chdir(currentPath)
 }
 
 func golangCreator(projectName string) {
-	os.Chdir(viper.GetString("golang_path"))
-	//run mkdir projectName && go mod init projectName && create main.go >> package main func main(){}
+	path := fmt.Sprintf("%s%s", viper.GetString("golang_path"), projectName)
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		err := os.Mkdir(path, 0755)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(projectName, " Directory created")
+	} else {
+		fmt.Println("Directory already exists")
+	}
+
+	source, sourceError := os.Open("./stub/main.go.stub")
+	if sourceError != nil {
+		log.Fatal(sourceError)
+	}
+	defer source.Close()
+
+	os.Chdir(fmt.Sprintf("%s%s", viper.GetString("golang_path"), projectName))
+
+	target, targetError := os.OpenFile("main.go", os.O_RDWR|os.O_CREATE, 0755)
+	if targetError != nil {
+		log.Fatal(targetError)
+	}
+	defer target.Close()
+
+	_, copyError := io.Copy(target, source)
+	if copyError != nil {
+		log.Fatal(copyError)
+	}
+
+	name := fmt.Sprintf("%s%s", "github.com/", projectName)
+	cmd := exec.Command("go", "mod", "init", name)
+
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("create golang projects")
 }
 
 func rustCreator(projectName string) {
@@ -130,9 +216,103 @@ func rustCreator(projectName string) {
 }
 
 func createVirtualServer(projectName string) {
-	//open sample.test.conf >> replace sample with project name >> save file to /etc/nginx/conf.d
-	//open /etc/hosts >> append 127.0.0.1 projectname.test >>save
-	//reload nginx
+	source, sourceError := os.OpenFile("./stub/sample.test.conf.stub", os.O_RDWR|os.O_CREATE, 0755)
+	if sourceError != nil {
+		log.Fatal(sourceError)
+	}
+	defer source.Close()
+
+	newFile, createError := os.Create("./stub/move.conf")
+	if createError != nil {
+		log.Fatal(createError)
+	}
+	defer newFile.Close()
+
+	scanner := bufio.NewScanner(source)
+	// buf := make([]byte, 0, 1024)
+	// scanner.Buffer(buf, 256*1024)
+	for scanner.Scan() {
+		content := fmt.Sprintf("%s%s", strings.Replace(scanner.Text(), "sample", projectName, -1), "\n")
+		_, writeError := newFile.WriteString(content)
+		if writeError != nil {
+			log.Fatal(writeError, 123)
+		}
+	}
+
+	error1 := scanner.Err()
+	if error1 != nil {
+		log.Fatal(error1, 345)
+	}
+
+	sourceFile := "./stub/move.conf"
+	destFile := fmt.Sprintf("%s%s%s", "/etc/nginx/conf.d/", projectName, ".test.conf")
+
+	cmd := exec.Command("sudo", "cp", "-p", sourceFile, destFile)
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+
+	out, err := cmd.Output()
+	if err != nil {
+		fmt.Println("Err", err)
+	} else {
+		fmt.Println("OUT:", string(out))
+	}
+
+	cmd = exec.Command("sudo", "cat", "/etc/hosts")
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+
+	out, err = cmd.Output()
+	if err != nil {
+		fmt.Println("Err", err)
+	} else {
+		fmt.Println("OUT:", string(out))
+	}
+
+	hostFile, hostCreateError := os.Create("./stub/hosts")
+	if hostCreateError != nil {
+		log.Fatal(hostCreateError)
+	}
+	defer hostFile.Close()
+
+	_, writeError := hostFile.WriteString(string(out))
+	if writeError != nil {
+		log.Fatal(writeError)
+	}
+	content := fmt.Sprintf("%s%s%s", "127.0.0.1\t", projectName, ".test\n")
+	_, writeError = hostFile.WriteString(content)
+	if writeError != nil {
+		log.Fatal(writeError)
+	}
+
+	error1 = scanner.Err()
+	if error1 != nil {
+		log.Fatal(error1, 345)
+	}
+	sourceFile = "./stub/hosts"
+	destFile = "/etc/hosts"
+
+	cmd = exec.Command("sudo", "mv", sourceFile, destFile)
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+
+	out, err = cmd.Output()
+	if err != nil {
+		fmt.Println("Err", err)
+	} else {
+		fmt.Println("OUT:", string(out))
+	}
+
+	cmd = exec.Command("sudo", "systemctl", "reload", "nginx.service")
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+
+	out, err = cmd.Output()
+	if err != nil {
+		fmt.Println("Err", err)
+	} else {
+		fmt.Println("OUT:", string(out))
+	}
 }
 
 func openCodeinVscode(projectPath string) {
@@ -144,6 +324,25 @@ func openCodeinVscode(projectPath string) {
 	}
 }
 
-func linkCreator() string {
-	return "link"
+func linkCreator(projectName string) {
+	url := fmt.Sprintf("%s%s%s", "http://", projectName, ".test")
+	openBrowser(url)
+	fmt.Println(url)
+}
+
+func openBrowser(url string) error {
+	var cmd string
+	var args []string
+
+	switch runtime.GOOS {
+	case "windows":
+		cmd = "cmd"
+		args = []string{"/c", "start"}
+	case "darwin":
+		cmd = "open"
+	default: // "linux", "freebsd", "openbsd", "netbsd"
+		cmd = "xdg-open"
+	}
+	args = append(args, url)
+	return exec.Command(cmd, args...).Start()
 }
