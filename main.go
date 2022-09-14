@@ -39,7 +39,7 @@ func main() {
 	switch projectType {
 	case "1":
 		laravelCreator(projectName)
-		createVirtualServer(projectName)
+		createVirtualServer(fmt.Sprintf("%s%s", viper.GetString("laravel_path"), projectName), projectName)
 		openCodeinVscode(fmt.Sprintf("%s%s", viper.GetString("laravel_path"), projectName))
 		linkCreator(projectName)
 		break
@@ -215,7 +215,7 @@ func rustCreator(projectName string) {
 	}
 }
 
-func createVirtualServer(projectName string) {
+func createVirtualServer(projectPath string, projectName string) {
 	source, sourceError := os.OpenFile("./stub/sample.test.conf.stub", os.O_RDWR|os.O_CREATE, 0755)
 	if sourceError != nil {
 		log.Fatal(sourceError)
@@ -231,8 +231,11 @@ func createVirtualServer(projectName string) {
 	scanner := bufio.NewScanner(source)
 	// buf := make([]byte, 0, 1024)
 	// scanner.Buffer(buf, 256*1024)
+	var content string
 	for scanner.Scan() {
-		content := fmt.Sprintf("%s%s", strings.Replace(scanner.Text(), "sample", projectName, -1), "\n")
+		addressReplace := strings.Replace(scanner.Text(), "address", projectPath, -1)
+		projectNameReplace := strings.Replace(addressReplace, "sample", projectName, -1)
+		content = fmt.Sprintf("%s%s", projectNameReplace, "\n")
 		_, writeError := newFile.WriteString(content)
 		if writeError != nil {
 			log.Fatal(writeError, 123)
@@ -279,7 +282,7 @@ func createVirtualServer(projectName string) {
 	if writeError != nil {
 		log.Fatal(writeError)
 	}
-	content := fmt.Sprintf("%s%s%s", "127.0.0.1\t", projectName, ".test\n")
+	content = fmt.Sprintf("%s%s%s", "127.0.0.1\t", projectName, ".test\n")
 	_, writeError = hostFile.WriteString(content)
 	if writeError != nil {
 		log.Fatal(writeError)

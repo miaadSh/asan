@@ -1,7 +1,7 @@
 server {
     listen 80;
     server_name sample.test www.sample.test;
-    root sample/public/;
+    root address/public/;
     index index.php index.html index.htm;
 
     location / {
