@@ -1,0 +1,171 @@
+{
+  "todotree": {
+    "tree": [
+      {
+        "key": 1668708749009,
+        "children": [
+          {
+            "key": 1668708812325,
+            "children": [],
+            "todo": {
+              "content": "setup virtual server",
+              "id": 1668708812325,
+              "level": "warning",
+              "done": false
+            }
+          },
+          {
+            "key": 1668708872302,
+            "children": [],
+            "todo": {
+              "content": "setup database for project",
+              "id": 1668708872302,
+              "level": "warning",
+              "done": false
+            }
+          },
+          {
+            "key": 1668708887925,
+            "children": [],
+            "todo": {
+              "content": "version mamnagment for install laravel project",
+              "id": 1668708887925,
+              "level": "warning",
+              "done": false
+            }
+          },
+          {
+            "key": 1668708989807,
+            "children": [],
+            "todo": {
+              "content": "after setup project show url for run project in browser",
+              "id": 1668708989807,
+              "level": "warning",
+              "done": false
+            }
+          },
+          {
+            "key": 1668719916270,
+            "children": [],
+            "todo": {
+              "content": "command format>> asan laravel project-name --version",
+              "id": 1668719916270,
+              "level": "warning",
+              "done": false
+            }
+          },
+          {
+            "key": 1668719970423,
+            "children": [],
+            "todo": {
+              "content": "show colorfull outout execute command",
+              "id": 1668719970423,
+              "level": "warning",
+              "done": false
+            }
+          }
+        ],
+        "todo": {
+          "content": "install laravel project on every os",
+          "id": 1668708749009,
+          "level": "success",
+          "done": false,
+          "date": null
+        }
+      },
+      {
+        "key": 1668708527204,
+        "children": [],
+        "todo": {
+          "content": "check install composer",
+          "id": 1668708527204,
+          "level": "success",
+          "done": false
+        }
+      },
+      {
+        "key": 1668708599739,
+        "children": [
+          {
+            "key": 1668720024883,
+            "children": [],
+            "todo": {
+              "content": "golang version  managment use gvm package",
+              "id": 1668720024883,
+              "level": "warning",
+              "done": false
+            }
+          }
+        ],
+        "todo": {
+          "content": "check install golang",
+          "id": 1668708599739,
+          "level": "success",
+          "done": false
+        }
+      },
+      {
+        "key": 1668708613772,
+        "children": [
+          {
+            "key": 1668720057150,
+            "children": [],
+            "todo": {
+              "content": "rust version managment use rustup command",
+              "id": 1668720057150,
+              "level": "warning",
+              "done": false
+            }
+          }
+        ],
+        "todo": {
+          "content": "check install rustlang",
+          "id": 1668708613772,
+          "level": "success",
+          "done": false
+        }
+      },
+      {
+        "key": 1668720090874,
+        "children": [],
+        "todo": {
+          "content": "select environment for run project ex. docker or virtual server",
+          "id": 1668720090874,
+          "level": "success",
+          "done": false
+        }
+      },
+      {
+        "key": 1668720170766,
+        "children": [],
+        "todo": {
+          "content": "deploy project on production server",
+          "id": 1668720170766,
+          "level": "success",
+          "done": false
+        }
+      },
+      {
+        "key": 1672908854507,
+        "children": [],
+        "todo": {
+          "content": "",
+          "id": 1672908854507,
+          "level": "default",
+          "done": false
+        }
+      }
+    ],
+    "expandKeys": [
+      1668708749009,
+      1668708599739,
+      1668708613772
+    ],
+    "schema": "https://github.com/Saber2pr/vsc-ext-todolist/blob/master/src/api/type.ts#L3",
+    "add_mode": "bottom",
+    "virtual": true,
+    "showLine": true,
+    "playFontSize": 24,
+    "title": "asan"
+  }
+}
